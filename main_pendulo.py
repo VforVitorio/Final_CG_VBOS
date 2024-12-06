@@ -35,12 +35,13 @@ class PendulumPhysics():
         self.initial_positions = []
         self.base_collision_object = None
 
-        # Configuración para Newton's Cradle
-        spacing = 0.25  # Reduced spacing between balls
+        # Change these values in your first code
+        spacing = 1.0  # Increased from 0.25 to 1.0
+        start_x = -2.0  # Changed from -0.5 to -2.0
+        ball_radius = 0.2  # Reduced from 0.5
+        ball_height = 0.7  # Changed from 1.0
+        initial_height = 1.7  # Changed from 2.0
         num_balls = 5
-        start_x = -0.5  # Centered position
-        initial_height = 2.0  # Height of suspension point
-        ball_height = 1.0  # Height of balls
         self.min_height = 0.5
         ball_radius = 0.12  # Smaller radius for better physics
 
