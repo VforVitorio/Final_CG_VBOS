@@ -18,43 +18,44 @@ import numpy as np
 camara = Camara()
 
 
-class PendulumPhysics:
+class PendulumPhysics():
+
     def __init__(self):
         self.physicsClient = p.connect(p.DIRECT)
-        p.setGravity(0, -9.81, 0)
+        p.setGravity(0, -9.81, 0)  # Mantiene la gravedad normal
         p.setRealTimeSimulation(0)
-
-        # Crear la base
-        self.base_shape = p.createCollisionShape(
-            p.GEOM_BOX, halfExtents=[5.0, 0.2, 2.0])
-        self.base_body = p.createMultiBody(
-            baseMass=0,
-            baseCollisionShapeIndex=self.base_shape,
-            basePosition=[0, 0.2, 0]
-        )
 
         self.balls = []
         self.constraints = []
-        positions = [-2, -1, 0, 1, 2]
 
-        for x in positions:
-            # Crear la bola del péndulo (ahora más abajo)
-            ball_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=0.5)
+        # Configurar posiciones iniciales alineadas en X
+        spacing = 1.0  # Espacio entre bolas
+        num_balls = 5  # Número de bolas
+        start_x = -2.0  # Posición inicial en X
+
+        for i in range(num_balls):
+            x = start_x + (i * spacing)
+
+            # Crear la bola con posición inicial más alta y centrada
             ball = p.createMultiBody(
                 baseMass=1.0,
-                baseCollisionShapeIndex=ball_shape,
-                basePosition=[x, -1, 0],  # Posición más baja
+                baseCollisionShapeIndex=p.createCollisionShape(
+                    p.GEOM_SPHERE, radius=0.5),
+                # Y=0.7 para que cuelgue debajo de la estructura
+                basePosition=[x, 0.7, 0],
                 baseOrientation=[0, 0, 0, 1]
             )
 
+            # Crear punto de anclaje alineado con la estructura
             anchor = p.createMultiBody(
                 baseMass=0,
                 baseCollisionShapeIndex=p.createCollisionShape(
                     p.GEOM_SPHERE, radius=0.01),
-                basePosition=[x, 3.5, 0]  # Punto de anclaje en el medio
+                # Y=0.7 coincide con la altura de la estructura
+                basePosition=[x, 1.7, 0]
             )
 
-            # Reemplaza los dos constraints con uno solo
+            # Crear constraint entre el ancla y la bola
             constraint = p.createConstraint(
                 anchor,
                 -1,
@@ -62,8 +63,8 @@ class PendulumPhysics:
                 -1,
                 p.JOINT_POINT2POINT,
                 [0, 0, 0],
-                [0, 2.0, 0],  # Offset desde la bola al punto de anclaje
-                [0, 0, 0]
+                [0, 0, 0],  # Sin offset en el punto de anclaje
+                [0, -1.0, 0]  # Mantiene la distancia de 1 unidad
             )
 
             p.changeConstraint(constraint, maxForce=50)
