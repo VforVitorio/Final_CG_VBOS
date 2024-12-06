@@ -36,10 +36,10 @@ class PendulumPhysics():
         self.base_collision_object = None
 
         # Change these values in your first code
-        spacing = 0.9  # Increased from 0.25 to 1.0
+        spacing = 1  # Increased from 0.25 to 1.0
         start_x = -2  # Changed from -0.5 to -2.0
-        ball_radius = 0.6  # Reduced from 0.5
-        ball_height = 0.6  # Changed from 1.0
+        ball_radius = 0.5  # Reduced from 0.5
+        ball_height = 0.5  # Changed from 1.0
         initial_height = 1.7  # Changed from 2.0
         num_balls = 5
         self.min_height = 1.2
@@ -70,7 +70,7 @@ class PendulumPhysics():
 
             # Crear bola con propiedades físicas mejoradas
             ball = p.createMultiBody(
-                baseMass=0.8,
+                baseMass=0.5,
                 baseCollisionShapeIndex=ball_collision,
                 basePosition=initial_pos,
                 baseOrientation=[0, 0, 0, 1]
