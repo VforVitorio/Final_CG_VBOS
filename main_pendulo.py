@@ -36,14 +36,13 @@ class PendulumPhysics():
         self.base_collision_object = None
 
         # Change these values in your first code
-        spacing = 1.0  # Increased from 0.25 to 1.0
-        start_x = -2.0  # Changed from -0.5 to -2.0
-        ball_radius = 0.2  # Reduced from 0.5
-        ball_height = 0.7  # Changed from 1.0
+        spacing = 0.9  # Increased from 0.25 to 1.0
+        start_x = -2  # Changed from -0.5 to -2.0
+        ball_radius = 0.6  # Reduced from 0.5
+        ball_height = 0.6  # Changed from 1.0
         initial_height = 1.7  # Changed from 2.0
         num_balls = 5
-        self.min_height = 0.5
-        ball_radius = 0.12  # Smaller radius for better physics
+        self.min_height = 1.2
 
         # Crear base física
         base_shape = p.createCollisionShape(
@@ -51,7 +50,7 @@ class PendulumPhysics():
             halfExtents=[5.0, 0.2, 2.0]
         )
         self.base_collision_object = p.createMultiBody(
-            baseMass=0,
+            baseMass=0.5,
             baseCollisionShapeIndex=base_shape,
             basePosition=[0, 0, 0],
             baseOrientation=[0, 0, 0, 1]
@@ -71,7 +70,7 @@ class PendulumPhysics():
 
             # Crear bola con propiedades físicas mejoradas
             ball = p.createMultiBody(
-                baseMass=1.0,
+                baseMass=0.8,
                 baseCollisionShapeIndex=ball_collision,
                 basePosition=initial_pos,
                 baseOrientation=[0, 0, 0, 1]
@@ -81,10 +80,10 @@ class PendulumPhysics():
             p.changeDynamics(
                 ball,
                 -1,
-                restitution=0.95,  # High restitution for elastic collisions
-                lateralFriction=0.0,  # Reduce friction
-                spinningFriction=0.0,
-                rollingFriction=0.0,
+                restitution=0.98,  # High restitution for elastic collisions
+                lateralFriction=0.1,  # Reduce friction
+                spinningFriction=0.05,
+                rollingFriction=0.05,
                 contactStiffness=10000,
                 contactDamping=0.1  # Low damping for more elastic collisions
             )
@@ -114,12 +113,13 @@ class PendulumPhysics():
             self.constraints.append(constraint)
 
     def prepare_ball_launch(self):
-        """Prepara la primera bola para el impacto inicial"""
+        """Prepares the first ball for the initial impact"""
         if self.balls:
             initial_pos = self.initial_positions[0]
-            # Mover la primera bola hacia atrás y arriba para el impulso
-            launch_pos = [initial_pos[0] - 0.3,
-                          initial_pos[1] + 0.5, initial_pos[2]]
+            # Move the first ball slightly back and up for a gentler launch
+            launch_pos = [initial_pos[0] - 0.1,
+                          initial_pos[1] + 0.25, initial_pos[2]]
+            impulse_strength = 3.0  # Adjust the impulse strength
 
             p.resetBaseVelocity(
                 self.balls[0],
@@ -130,6 +130,15 @@ class PendulumPhysics():
                 self.balls[0],
                 launch_pos,
                 [0, 0, 0, 1]
+            )
+
+            # Apply the external force in the positive x-direction
+            p.applyExternalForce(
+                self.balls[0],
+                -1,
+                forceObj=[impulse_strength, 0, 0],
+                posObj=[0, 0, 0],
+                flags=p.WORLD_FRAME
             )
 
     def apply_controlled_impulse(self):
@@ -147,7 +156,7 @@ class PendulumPhysics():
 
     def step(self):
         """Avanza la simulación con mejor control de colisiones"""
-        for _ in range(4):
+        for _ in range(8):
             p.stepSimulation()
 
         # Verificar y corregir posiciones si es necesario
