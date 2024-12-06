@@ -94,7 +94,7 @@ class PendulumPhysics():
             # Aplicar fuerza para el impulso inicial
             p.applyExternalForce(
                 self.balls[0], -1,
-                forceObj=[5.0, 0, 0],  # Fuerza en dirección positiva X
+                forceObj=[1.0, 0, 0],  # Fuerza en dirección positiva X
                 posObj=launch_pos,
                 flags=p.WORLD_FRAME
             )
