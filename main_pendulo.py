@@ -16,6 +16,8 @@ import trimesh
 import numpy as np
 # Inicialización de la cámara y el modelo 3D
 camara = Camara()
+POSICIONES_DONUTS_X = [-2, -1, 0.0, 1, 2]
+POSICIONES_DONUTS_Z = [-1.5, 1.5]
 
 
 class PendulumPhysics():
@@ -183,17 +185,6 @@ def renderizar(ball_positions=None):
     # Dibuja las bolas del péndulo y sus conexiones
     if ball_positions:
         for i, pos in enumerate(ball_positions):
-            # Dibujar donuts en ambos puntos de anclaje (arriba)
-            donut.dibujar(textura_id=textura_donut,
-                          t_x=pos[0], t_y=3.5, t_z=1.5,  # Donut frontal arriba
-                          angulo=90.0, eje_x=0.0, eje_y=0.0, eje_z=1.0,
-                          sx=0.22, sy=0.22, sz=0.12)
-
-            donut.dibujar(textura_id=textura_donut,
-                          # Donut trasero arriba
-                          t_x=pos[0], t_y=3.5, t_z=-1.5,
-                          angulo=-90.0, eje_x=0.0, eje_y=0.0, eje_z=1.0,
-                          sx=0.22, sy=0.22, sz=0.12)
 
             # Dibujar hilos diagonales
             dibujar_hilo(cilindro, pos[0], 3.5, 0, pos, False)
@@ -219,6 +210,7 @@ def dibujar_estructura():
     # Cilindros verticales en las esquinas
     for x in [-4.5, 4.5]:
         for z in [-1.5, 1.5]:
+            # Dibuja los cilindros verticales
             cilindro.dibujar(textura_id=textura_cilindro, t_x=x, t_y=1.8, t_z=z,
                              angulo=0.0, eje_x=0.0, eje_y=0.0, eje_z=0.0,
                              sx=0.25, sy=3.5, sz=0.25)
@@ -240,6 +232,21 @@ def dibujar_estructura():
                 cuarto_esfera.dibujar(textura_id=textura_cilindro, t_x=x, t_y=3.48, t_z=z,
                                       angulo=180.0, eje_x=0.0, eje_y=1.0, eje_z=1.0,
                                       sx=0.3, sy=0.3, sz=0.3)
+    for x in POSICIONES_DONUTS_X:
+        for z in POSICIONES_DONUTS_Z:
+            donut.dibujar(
+                textura_id=textura_donut,
+                t_x=x,
+                t_y=3.5,
+                t_z=z,
+                angulo=90.0 if z > 0 else -90.0,  # Ajusta el ángulo según la posición
+                eje_x=0.0,
+                eje_y=0.0,
+                eje_z=1.0,
+                sx=0.22,
+                sy=0.22,
+                sz=0.12
+            )
 
 
 def dibujar_hilo(modelo, t_x, t_y, t_z, punto_destino, es_trasero=False):
