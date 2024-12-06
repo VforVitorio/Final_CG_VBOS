@@ -21,84 +21,153 @@ POSICIONES_DONUTS_Z = [-1.5, 1.5]
 
 
 class PendulumPhysics():
-
     def __init__(self):
         self.physicsClient = p.connect(p.DIRECT)
-        p.setGravity(0, -9.81, 0)  # Mantiene la gravedad normal
-        p.setRealTimeSimulation(0)
 
+        # Configuración más precisa de la física
+        p.setGravity(0, -9.81, 0)
+        p.setRealTimeSimulation(0)
+        p.setTimeStep(1.0/240.0)
+
+        # Parámetros ajustables
         self.balls = []
         self.constraints = []
+        self.initial_positions = []
+        self.base_collision_object = None
 
-        # Configurar posiciones iniciales alineadas en X
-        spacing = 1.0  # Espacio entre bolas
-        num_balls = 5  # Número de bolas
-        start_x = -2.0  # Posición inicial en X
+        # Configuración para Newton's Cradle
+        spacing = 0.25  # Reduced spacing between balls
+        num_balls = 5
+        start_x = -0.5  # Centered position
+        initial_height = 2.0  # Height of suspension point
+        ball_height = 1.0  # Height of balls
+        self.min_height = 0.5
+        ball_radius = 0.12  # Smaller radius for better physics
 
+        # Crear base física
+        base_shape = p.createCollisionShape(
+            p.GEOM_BOX,
+            halfExtents=[5.0, 0.2, 2.0]
+        )
+        self.base_collision_object = p.createMultiBody(
+            baseMass=0,
+            baseCollisionShapeIndex=base_shape,
+            basePosition=[0, 0, 0],
+            baseOrientation=[0, 0, 0, 1]
+        )
+
+        # Crear las bolas en línea horizontal
         for i in range(num_balls):
             x = start_x + (i * spacing)
+            initial_pos = [x, ball_height, 0]  # Balls at same height
+            self.initial_positions.append(initial_pos)
 
-            # Crear la bola con posición inicial más alta y centrada
+            # Crear colisionador de la bola
+            ball_collision = p.createCollisionShape(
+                p.GEOM_SPHERE,
+                radius=ball_radius
+            )
+
+            # Crear bola con propiedades físicas mejoradas
             ball = p.createMultiBody(
                 baseMass=1.0,
-                baseCollisionShapeIndex=p.createCollisionShape(
-                    p.GEOM_SPHERE, radius=0.5),
-                # Y=0.7 para que cuelgue debajo de la estructura
-                basePosition=[x, 0.7, 0],
+                baseCollisionShapeIndex=ball_collision,
+                basePosition=initial_pos,
                 baseOrientation=[0, 0, 0, 1]
             )
 
-            # Crear punto de anclaje alineado con la estructura
+            # Configurar propiedades de contacto para Newton's Cradle
+            p.changeDynamics(
+                ball,
+                -1,
+                restitution=0.95,  # High restitution for elastic collisions
+                lateralFriction=0.0,  # Reduce friction
+                spinningFriction=0.0,
+                rollingFriction=0.0,
+                contactStiffness=10000,
+                contactDamping=0.1  # Low damping for more elastic collisions
+            )
+
+            # Crear punto de anclaje
             anchor = p.createMultiBody(
                 baseMass=0,
                 baseCollisionShapeIndex=p.createCollisionShape(
                     p.GEOM_SPHERE, radius=0.01),
-                # Y=0.7 coincide con la altura de la estructura
-                basePosition=[x, 1.7, 0]
+                basePosition=[x, initial_height, 0]  # Higher anchor point
             )
 
-            # Crear constraint entre el ancla y la bola
+            # Crear constraint tipo pendulo
             constraint = p.createConstraint(
-                anchor,
-                -1,
-                ball,
-                -1,
+                anchor, -1,
+                ball, -1,
                 p.JOINT_POINT2POINT,
                 [0, 0, 0],
-                [0, 0, 0],  # Sin offset en el punto de anclaje
-                [0, -1.0, 0]  # Mantiene la distancia de 1 unidad
+                [0, ball_radius, 0],  # Offset for connection point
+                [0, -(initial_height - ball_height), 0]  # Length of pendulum
             )
 
+            # Configurar constraint con menos fuerza para permitir mejor oscilación
             p.changeConstraint(constraint, maxForce=50)
 
             self.balls.append(ball)
             self.constraints.append(constraint)
 
-    def step(self):
-        p.stepSimulation()
+    def prepare_ball_launch(self):
+        """Prepara la primera bola para el impacto inicial"""
+        if self.balls:
+            initial_pos = self.initial_positions[0]
+            # Mover la primera bola hacia atrás y arriba para el impulso
+            launch_pos = [initial_pos[0] - 0.3,
+                          initial_pos[1] + 0.5, initial_pos[2]]
 
-    def get_ball_positions(self):
-        """Obtener las posiciones actuales de las bolas para la renderización"""
-        positions = []
-        for ball in self.balls:
-            pos, _ = p.getBasePositionAndOrientation(ball)
-            positions.append(pos)
-        return positions
+            p.resetBaseVelocity(
+                self.balls[0],
+                linearVelocity=[0, 0, 0],
+                angularVelocity=[0, 0, 0]
+            )
+            p.resetBasePositionAndOrientation(
+                self.balls[0],
+                launch_pos,
+                [0, 0, 0, 1]
+            )
 
-    def apply_impulse_to_ball(self, ball_index, impulse):
-        """Aplicar un impulso a una bola específica"""
-        if 0 <= ball_index < len(self.balls):
+    def apply_controlled_impulse(self):
+        """Aplica un impulso más preciso"""
+        if self.balls:
+            # Ajustar fuerza para mejor comportamiento del péndulo
+            impulse_strength = 2.0
             p.applyExternalForce(
-                self.balls[ball_index],
+                self.balls[0],
                 -1,
-                forceObj=impulse,
+                forceObj=[impulse_strength, -impulse_strength/2, 0],
                 posObj=[0, 0, 0],
                 flags=p.WORLD_FRAME
             )
 
+    def step(self):
+        """Avanza la simulación con mejor control de colisiones"""
+        for _ in range(4):
+            p.stepSimulation()
+
+        # Verificar y corregir posiciones si es necesario
+        for ball in self.balls:
+            pos, _ = p.getBasePositionAndOrientation(ball)
+            if pos[1] < self.min_height:
+                p.resetBasePositionAndOrientation(
+                    ball,
+                    [pos[0], self.min_height, pos[2]],
+                    [0, 0, 0, 1]
+                )
+                vel = list(p.getBaseVelocity(ball)[0])
+                if vel[1] < 0:
+                    vel[1] = 0
+                    p.resetBaseVelocity(ball, vel, [0, 0, 0])
+
+    def get_ball_positions(self):
+        return [p.getBasePositionAndOrientation(ball)[0] for ball in self.balls]
+
     def cleanup(self):
         p.disconnect()
-
 
 # Inicialización de la escena
 
@@ -328,7 +397,7 @@ while ejecutando:
             procesar_eventos_raton(evento, camara)
         elif evento.type == pygame.KEYDOWN:
             if evento.key == pygame.K_SPACE:
-                physics.apply_impulse_to_ball(0, [150, 0, 0])
+                physics.prepare_ball_launch()
 
     consultar_estado_teclado(camara, delta_time)
     physics.step()
