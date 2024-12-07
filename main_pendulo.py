@@ -25,7 +25,7 @@ class PendulumPhysics():
         self.physicsClient = p.connect(p.DIRECT)
 
         # Configuración precisa de física
-        p.setGravity(0, -9.81, 0)
+        p.setGravity(0, -2, 0)
         p.setRealTimeSimulation(0)
         p.setTimeStep(1.0 / 480.0)  # TimeStep más preciso para evitar errores
 
