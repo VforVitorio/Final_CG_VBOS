@@ -11,8 +11,6 @@ from texturas import cargar_textura
 import math
 # Nuevas importaciones
 import pybullet as p
-import pybullet_data
-import trimesh
 import numpy as np
 # Inicialización de la cámara y el modelo 3D
 camara = Camara()
