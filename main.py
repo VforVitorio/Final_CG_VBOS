@@ -74,7 +74,14 @@ ejecutando = True
 
 
 def renderizar():
-    """Renderiza los elementos de la escena, incluyendo la cámara, elementos auxiliares y el modelo 3D."""
+    """Renderiza los elementos de la escena, incluyendo la cámara, elementos auxiliares y los modelos 3D.
+
+    Esta función dibuja los modelos y elementos de la escena, como el cubo, los cilindros,
+    esferas y donuts, aplicando las posiciones y texturas adecuadas.
+
+    Returns:
+        None
+    """
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
@@ -188,7 +195,17 @@ def renderizar():
 
 
 def dibujar_hilo(modelo, t_x, t_y, t_z, punto_destino, es_trasero=False):
-    """Dibuja un hilo desde un punto origen a un punto destino"""
+    """
+    Dibuja un hilo diagonal entre un punto origen y un punto destino utilizando un modelo dado, con una textura específica y una orientación basada en la dirección del hilo.
+
+    Parámetros:
+    - modelo: Objeto que se usará para dibujar el hilo (generalmente un cilindro).
+    - t_x, t_y, t_z (float): Coordenadas del punto de origen del hilo.
+    - punto_destino (tuple[float, float, float]): Coordenadas del punto final del hilo.
+    - es_trasero (bool): Indica si el hilo es parte trasera del modelo. No se usa actualmente.
+
+    El hilo se dibuja con una textura predeterminada, ajustando su longitud y orientación con base en las posiciones de origen y destino.
+    """
     # Calculamos la longitud
     dx = punto_destino[0] - t_x
     dy = punto_destino[1] - (t_y - 0.2)
@@ -217,7 +234,16 @@ def dibujar_hilo(modelo, t_x, t_y, t_z, punto_destino, es_trasero=False):
 
 
 def dibujar_esfera_union(modelo, x, y, z, es_trasero=False):
-    """Dibuja una media esfera en el extremo de los hilos"""
+    """
+    Dibuja una media esfera en el extremo de un hilo, simulando una unión o conexión con un modelo de textura específica.
+
+    Parámetros:
+    - modelo: Objeto que se usará para dibujar la media esfera.
+    - x, y, z (float): Coordenadas donde se ubicará la media esfera.
+    - es_trasero (bool): Indica si la esfera está ubicada en la parte trasera del modelo. No se usa actualmente.
+
+    La media esfera se orienta con la parte plana mirando hacia arriba y se ajusta para alinear correctamente con el hilo al que está unida.
+    """
     esfera.dibujar(
         textura_id=textura_donut,
         t_x=x,
@@ -235,7 +261,16 @@ def dibujar_esfera_union(modelo, x, y, z, es_trasero=False):
 
 
 def dibujar_bola_pendulo(modelo, x, y, z, es_trasero=False):
-    """Dibuja una bola grande del péndulo de Newton"""
+    """
+    Dibuja una bola grande del péndulo de Newton, representando la masa en movimiento.
+
+    Parámetros:
+    - modelo: Objeto que se usará para dibujar la bola (generalmente una esfera).
+    - x, y, z (float): Coordenadas donde se colocará la bola.
+    - es_trasero (bool): Indica si la bola pertenece a la parte trasera del modelo. No se usa actualmente.
+
+    La bola se escala para tener un tamaño mayor, representando visualmente su relevancia en el modelo del péndulo.
+    """
     esfera.dibujar(
         textura_id=textura_esfera,
         t_x=x,
