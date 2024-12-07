@@ -23,7 +23,7 @@ class PendulumPhysics():
         self.physicsClient = p.connect(p.DIRECT)
 
         # Configuración precisa de física
-        p.setGravity(0, -2, 0)
+        p.setGravity(0, -9.81, 0)
         p.setRealTimeSimulation(0)
         p.setTimeStep(1.0 / 480.0)  # TimeStep más preciso para evitar errores
 
@@ -44,24 +44,38 @@ class PendulumPhysics():
             self.initial_positions.append(position)
 
             # Crear la bola
-            ball_collision = p.createCollisionShape(p.GEOM_SPHERE, radius=ball_radius)
+            ball_collision = p.createCollisionShape(
+                p.GEOM_SPHERE, radius=ball_radius)
             ball = p.createMultiBody(
                 baseMass=1.0,  # Masa ajustada
                 baseCollisionShapeIndex=ball_collision,
                 basePosition=position
             )
-            p.changeDynamics(
-                ball, -1,
-                restitution=1.0,  # Elasticidad máxima
-                lateralFriction=0.01,  # Fricción mínima
-                spinningFriction=0.01,
-                rollingFriction=0.01
-            )
+
+            if 1 <= i <= 3:  # BOlas centrales
+                p.changeDynamics(
+                    ball, -1,
+                    restitution=0.95,  # Elasticidad máxima
+                    lateralFriction=0.03,  # Fricción mínima
+                    spinningFriction=0.02,
+                    rollingFriction=0.02,
+                    linearDamping=0.05,
+                    angularDamping=0.05
+                )
+            else:
+                p.changeDynamics(
+                    ball, -1,
+                    restitution=0.8,  # Lower bounciness for end balls
+                    lateralFriction=0.01,
+                    spinningFriction=0.01,
+                    rollingFriction=0.01
+                )
 
             # Crear el punto de anclaje y restricción
             anchor = p.createMultiBody(
                 baseMass=0,
-                baseCollisionShapeIndex=p.createCollisionShape(p.GEOM_SPHERE, radius=0.01),
+                baseCollisionShapeIndex=p.createCollisionShape(
+                    p.GEOM_SPHERE, radius=0.01),
                 basePosition=[x, initial_height, 0]
             )
             constraint = p.createConstraint(
@@ -90,7 +104,7 @@ class PendulumPhysics():
             # Aplicar fuerza inicial
             p.applyExternalForce(
                 self.balls[0], -1,
-                forceObj=[8.0, 0, 0],  # Reducir fuerza inicial
+                forceObj=[2.5, 0, 0],  # Reducir fuerza inicial
                 posObj=launch_pos,
                 flags=p.WORLD_FRAME
             )
@@ -104,18 +118,21 @@ class PendulumPhysics():
             velocity = p.getBaseVelocity(ball)[0]
 
             # Mantener posición en Y cerca de su altura inicial
-            if abs(pos[1] - self.initial_positions[i][1]) > 0.15:  # Permitir más libertad en Y
+            if abs(pos[1] - self.initial_positions[i][1]) > 0.2:  # Permitir más libertad en Y
                 corrected_pos = [pos[0], self.initial_positions[i][1], pos[2]]
-                p.resetBasePositionAndOrientation(ball, corrected_pos, [0, 0, 0, 1])
-                p.resetBaseVelocity(ball, [velocity[0], 0, velocity[2]], [0, 0, 0])
+                p.resetBasePositionAndOrientation(
+                    ball, corrected_pos, [0, 0, 0, 1])
+                p.resetBaseVelocity(
+                    ball, [velocity[0], 0, velocity[2]], [0, 0, 0])
 
             # Transferencia de velocidad entre bolas
             if i < len(self.balls) - 1:
                 v1 = velocity[0]
                 v2 = p.getBaseVelocity(self.balls[i + 1])[0][0]
-                if abs(v1) > 0.05 and abs(v2) < 0.02:  # Transferencia más suave
+                if abs(v1) > 0.05 and abs(v2) < 0.01:  # Transferencia más suave
                     transfer_velocity = v1 * 0.9  # Transferencia reducida
-                    p.resetBaseVelocity(self.balls[i + 1], linearVelocity=[transfer_velocity, 0, 0])
+                    p.resetBaseVelocity(
+                        self.balls[i + 1], linearVelocity=[transfer_velocity, 0, 0])
 
     def get_ball_positions(self):
         """Obtiene las posiciones actuales de las bolas"""
@@ -124,10 +141,6 @@ class PendulumPhysics():
     def cleanup(self):
         """Desconecta la simulación de PyBullet"""
         p.disconnect()
-
-
-
-
 
 
 # Inicialización de la escena
@@ -169,7 +182,7 @@ def inicializar_escena():
 screen = inicializar_escena()  # Crea la ventana y configura el contexto OpenGL
 physics = PendulumPhysics()
 # Modelos
-# Modelos   
+# Modelos
 cubo = Modelo("modelos/cubo.obj")
 cono = Modelo("modelos/cono.obj")
 cilindro = Modelo("modelos/cilindro.obj")
