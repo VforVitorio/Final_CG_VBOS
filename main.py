@@ -24,7 +24,7 @@ def inicializar_escena():
     pygame.init()
     screen = pygame.display.set_mode(
         (SCREEN_WIDTH, SCREEN_HEIGHT), DOUBLEBUF | OPENGL)
-    pygame.display.set_caption('VEGA SOBRAL VICTOR')
+    pygame.display.set_caption('GRUPO 06')
 
     # Configuración de OpenGL
     glClearColor(0, 0, 0, 1)  # Fondo negro

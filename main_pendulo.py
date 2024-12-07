@@ -27,7 +27,7 @@ class PendulumPhysics():
         # Configuración precisa de física
         p.setGravity(0, -9.81, 0)
         p.setRealTimeSimulation(0)
-        p.setTimeStep(1.0 / 240.0)
+        p.setTimeStep(1.0 / 480.0)  # TimeStep más preciso para evitar errores
 
         self.balls = []
         self.constraints = []
@@ -42,22 +42,22 @@ class PendulumPhysics():
         # Crear bolas y configurarlas
         for i in range(num_balls):
             x = start_x + i * spacing
-            position = [x, initial_height - ball_radius, 0]  # Altura inicial ajustada
+            position = [x, initial_height - ball_radius, 0]
             self.initial_positions.append(position)
 
             # Crear la bola
             ball_collision = p.createCollisionShape(p.GEOM_SPHERE, radius=ball_radius)
             ball = p.createMultiBody(
-                baseMass=0.5,
+                baseMass=1.0,  # Masa ajustada
                 baseCollisionShapeIndex=ball_collision,
                 basePosition=position
             )
             p.changeDynamics(
                 ball, -1,
-                restitution=0.9,  # Ligeramente menor a 1.0 para reducir velocidad
-                lateralFriction=0.01,
-                spinningFriction=0.0,
-                rollingFriction=0.0
+                restitution=1.0,  # Elasticidad máxima
+                lateralFriction=0.01,  # Fricción mínima
+                spinningFriction=0.01,
+                rollingFriction=0.01
             )
 
             # Crear el punto de anclaje y restricción
@@ -92,7 +92,7 @@ class PendulumPhysics():
             # Aplicar fuerza inicial
             p.applyExternalForce(
                 self.balls[0], -1,
-                forceObj=[8.0, 0, 0],  # Fuerza reducida para menor velocidad
+                forceObj=[15.0, 0, 0],  # Fuerza inicial mayor
                 posObj=launch_pos,
                 flags=p.WORLD_FRAME
             )
@@ -106,17 +106,18 @@ class PendulumPhysics():
             velocity = p.getBaseVelocity(ball)[0]
 
             # Mantener posición en Y cerca de su altura inicial
-            if abs(pos[1] - self.initial_positions[i][1]) > 0.05:  # Límite en Y
+            if abs(pos[1] - self.initial_positions[i][1]) > 0.15:  # Permitir más libertad en Y
                 corrected_pos = [pos[0], self.initial_positions[i][1], pos[2]]
                 p.resetBasePositionAndOrientation(ball, corrected_pos, [0, 0, 0, 1])
                 p.resetBaseVelocity(ball, [velocity[0], 0, velocity[2]], [0, 0, 0])
 
-            # Transferir velocidad a la bola siguiente si es necesario
+            # Transferencia de velocidad entre bolas
             if i < len(self.balls) - 1:
-                v1 = velocity
-                v2 = p.getBaseVelocity(self.balls[i + 1])[0]
-                if abs(v1[0]) > 0.05 and abs(v2[0]) < 0.03:  # Transferencia de energía ajustada
-                    p.resetBaseVelocity(self.balls[i + 1], linearVelocity=[v1[0], 0, 0])
+                v1 = velocity[0]
+                v2 = p.getBaseVelocity(self.balls[i + 1])[0][0]
+                if abs(v1) > 0.1 and abs(v2) < 0.05:  # Transferencia de energía
+                    transfer_velocity = v1 * 0.98  # Ligeramente reducido
+                    p.resetBaseVelocity(self.balls[i + 1], linearVelocity=[transfer_velocity, 0, 0])
 
     def get_ball_positions(self):
         """Obtiene las posiciones actuales de las bolas"""
@@ -125,6 +126,8 @@ class PendulumPhysics():
     def cleanup(self):
         """Desconecta la simulación de PyBullet"""
         p.disconnect()
+
+
 
 
 
@@ -142,7 +145,7 @@ def inicializar_escena():
     pygame.init()
     screen = pygame.display.set_mode(
         (SCREEN_WIDTH, SCREEN_HEIGHT), DOUBLEBUF | OPENGL)
-    pygame.display.set_caption('VEGA SOBRAL VICTOR')
+    pygame.display.set_caption('GRUPO 06')
 
     # Configuración de OpenGL
     glClearColor(0, 0, 0, 1)  # Fondo negro
