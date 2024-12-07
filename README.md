@@ -1,6 +1,8 @@
 # Péndulo de Newton 3D
 
-Este proyecto implementa una **simulación interactiva en 3D** del péndulo de Newton utilizando **Python**, **OpenGL**, y **PyBullet** para la física.
+Este proyecto implementa una **simulación interactiva en 3D** del péndulo de Newton utilizando **Python**, **OpenGL**, y **PyBullet** para la física. Se trata de un proyecto académico, realizado por el Grupo 06 de la asignatura de Computación Gráfica.
+
+El proyecto consta de dos archivos principales, donde se puede visualizar el modelo estático del péndulo de Newton y un modelo más simplificado al que se le aplican físicas, respectivamente.
 
 ## 📝 Descripción
 
