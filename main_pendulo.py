@@ -8,139 +8,13 @@ from configuracion import *
 from luces import configurar_luces
 # Importa cargar_textura para gestionar texturas
 from texturas import cargar_textura
+from clase_fisicas_pendulo import PendulumPhysics
 import math
-# Nuevas importaciones
-import pybullet as p
-import numpy as np
+
 # Inicialización de la cámara y el modelo 3D
 camara = Camara()
 POSICIONES_DONUTS_X = [-2, -1, 0.0, 1, 2]
 POSICIONES_DONUTS_Z = [-1.5, 1.5]
-
-
-class PendulumPhysics():
-    def __init__(self):
-        self.physicsClient = p.connect(p.DIRECT)
-
-        # Configuración precisa de física
-        p.setGravity(0, -9.81, 0)
-        p.setRealTimeSimulation(0)
-        p.setTimeStep(1.0 / 480.0)  # TimeStep más preciso para evitar errores
-
-        self.balls = []
-        self.constraints = []
-        self.initial_positions = []
-
-        spacing = 1.0
-        start_x = -2.0
-        ball_radius = 0.5
-        initial_height = 1.7  # Altura del punto de anclaje
-        num_balls = 5
-
-        # Crear bolas y configurarlas
-        for i in range(num_balls):
-            x = start_x + i * spacing
-            position = [x, initial_height - ball_radius, 0]
-            self.initial_positions.append(position)
-
-            # Crear la bola
-            ball_collision = p.createCollisionShape(
-                p.GEOM_SPHERE, radius=ball_radius)
-            ball = p.createMultiBody(
-                baseMass=1.0,  # Masa ajustada
-                baseCollisionShapeIndex=ball_collision,
-                basePosition=position
-            )
-
-            if 1 <= i <= 3:  # BOlas centrales
-                p.changeDynamics(
-                    ball, -1,
-                    restitution=0.95,  # Elasticidad máxima
-                    lateralFriction=0.03,  # Fricción mínima
-                    spinningFriction=0.02,
-                    rollingFriction=0.02,
-                    linearDamping=0.05,
-                    angularDamping=0.05
-                )
-            else:
-                p.changeDynamics(
-                    ball, -1,
-                    restitution=0.8,  # Lower bounciness for end balls
-                    lateralFriction=0.01,
-                    spinningFriction=0.01,
-                    rollingFriction=0.01
-                )
-
-            # Crear el punto de anclaje y restricción
-            anchor = p.createMultiBody(
-                baseMass=0,
-                baseCollisionShapeIndex=p.createCollisionShape(
-                    p.GEOM_SPHERE, radius=0.01),
-                basePosition=[x, initial_height, 0]
-            )
-            constraint = p.createConstraint(
-                anchor, -1,
-                ball, -1,
-                p.JOINT_POINT2POINT,
-                jointAxis=[0, 0, 0],
-                parentFramePosition=[0, 0, 0],
-                childFramePosition=[0, -(initial_height - position[1]), 0]
-            )
-
-            self.balls.append(ball)
-            self.constraints.append(constraint)
-
-    def prepare_ball_launch(self):
-        """Impulsa la primera bola"""
-        if self.balls:
-            initial_pos = self.initial_positions[0]
-            launch_pos = [initial_pos[0] - 0.5, initial_pos[1], initial_pos[2]]
-
-            # Configurar posición inicial de la bola
-            p.resetBasePositionAndOrientation(
-                self.balls[0], launch_pos, [0, 0, 0, 1])
-            p.resetBaseVelocity(self.balls[0], [0, 0, 0], [0, 0, 0])
-
-            # Aplicar fuerza inicial
-            p.applyExternalForce(
-                self.balls[0], -1,
-                forceObj=[2.5, 0, 0],  # Reducir fuerza inicial
-                posObj=launch_pos,
-                flags=p.WORLD_FRAME
-            )
-
-    def step(self):
-        """Simula la física y asegura restricciones en Y"""
-        p.stepSimulation()
-
-        for i, ball in enumerate(self.balls):
-            pos, _ = p.getBasePositionAndOrientation(ball)
-            velocity = p.getBaseVelocity(ball)[0]
-
-            # Mantener posición en Y cerca de su altura inicial
-            if abs(pos[1] - self.initial_positions[i][1]) > 0.15:  # Permitir más libertad en Y
-                corrected_pos = [pos[0], self.initial_positions[i][1], pos[2]]
-                p.resetBasePositionAndOrientation(
-                    ball, corrected_pos, [0, 0, 0, 1])
-                p.resetBaseVelocity(
-                    ball, [velocity[0], 0, velocity[2]], [0, 0, 0])
-
-            # Transferencia de velocidad entre bolas
-            if i < len(self.balls) - 1:
-                v1 = velocity[0]
-                v2 = p.getBaseVelocity(self.balls[i + 1])[0][0]
-                if abs(v1) > 0.05 and abs(v2) < 0.01:  # Transferencia más suave
-                    transfer_velocity = v1 * 0.9  # Transferencia reducida
-                    p.resetBaseVelocity(
-                        self.balls[i + 1], linearVelocity=[transfer_velocity, 0, 0])
-
-    def get_ball_positions(self):
-        """Obtiene las posiciones actuales de las bolas"""
-        return [p.getBasePositionAndOrientation(ball)[0] for ball in self.balls]
-
-    def cleanup(self):
-        """Desconecta la simulación de PyBullet"""
-        p.disconnect()
 
 
 # Inicialización de la escena
@@ -182,7 +56,10 @@ def inicializar_escena():
 screen = inicializar_escena()  # Crea la ventana y configura el contexto OpenGL
 physics = PendulumPhysics()
 # Modelos
-# Modelos
+
+# Creación de la instancia de cada modelo con su obj correspondiente
+
+
 cubo = Modelo("modelos/cubo.obj")
 cono = Modelo("modelos/cono.obj")
 cilindro = Modelo("modelos/cilindro.obj")
@@ -192,13 +69,14 @@ cuarto_esfera = Modelo("modelos/cuarto_esfera.obj")
 
 
 # Texturas
-textura_cubo = cargar_textura("texturas/madera.png")  # Textura marrón
+# Se cargan las texturas a partir de su png correspondiente
+textura_cubo = cargar_textura("texturas/madera.png")
 textura_cilindro = cargar_textura("texturas/metal.png")
 textura_donut = cargar_textura("texturas/metal_2.png")
 textura_esfera = cargar_textura("texturas/metal_esfera.png")
 textura_hilo = cargar_textura("texturas/hilo_metalico.png")
 
-
+# Se inicializa el reloj de pygame
 clock = pygame.time.Clock()
 ejecutando = True
 
@@ -206,7 +84,19 @@ ejecutando = True
 
 
 def renderizar(ball_positions=None):
-    """Renderiza la escena completa con las bolas del péndulo"""
+    """
+    Renderiza la escena completa con las bolas del péndulo de Newton.
+
+    Parámetros:
+        - ball_positions: Lista de posiciones de las bolas del péndulo. Cada posición es una tupla (x, y, z).
+
+    Acciones:
+        - Configura la cámara.
+        - Dibuja la base cúbica.
+        - Dibuja la estructura del péndulo (cilindros y uniones).
+        - Dibuja las bolas del péndulo y sus hilos.
+    """
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
@@ -250,7 +140,13 @@ def renderizar(ball_positions=None):
 
 
 def dibujar_estructura():
-    """Dibuja los cilindros verticales y horizontales con sus uniones"""
+    """
+    Dibuja la estructura del péndulo, que consiste en:
+        - Cilindros verticales en las esquinas.
+        - Cilindros horizontales que conectan las columnas.
+        - Esferas en las uniones.
+        - Donuts decorativos en los cilindros horizontales.
+    """
     # Cilindros verticales en las esquinas
     for x in [-4.5, 4.5]:
         for z in [-1.5, 1.5]:
@@ -294,7 +190,17 @@ def dibujar_estructura():
 
 
 def dibujar_hilo(modelo, t_x, t_y, t_z, punto_destino, es_trasero=False):
-    """Dibuja un hilo diagonal desde un punto origen a un punto destino"""
+    """
+    Dibuja un hilo diagonal entre un punto origen y un punto destino utilizando un modelo dado, con una textura específica y una orientación basada en la dirección del hilo.
+
+    Parámetros:
+    - modelo: Objeto que se usará para dibujar el hilo (generalmente un cilindro).
+    - t_x, t_y, t_z (float): Coordenadas del punto de origen del hilo.
+    - punto_destino (tuple[float, float, float]): Coordenadas del punto final del hilo.
+    - es_trasero (bool): Indica si el hilo es parte trasera del modelo. No se usa actualmente.
+
+    El hilo se dibuja con una textura predeterminada, ajustando su longitud y orientación con base en las posiciones de origen y destino.
+    """
     dx = punto_destino[0] - t_x
     dy = punto_destino[1] - t_y  # Ya no restamos offset
     dz = punto_destino[2] - t_z
@@ -328,7 +234,17 @@ def dibujar_hilo(modelo, t_x, t_y, t_z, punto_destino, es_trasero=False):
 
 
 def dibujar_esfera_union(modelo, x, y, z, es_trasero=False):
-    """Dibuja una media esfera en el extremo de los hilos"""
+    """
+    Dibuja una media esfera en el extremo de un hilo, simulando una unión o conexión con un modelo de textura específica.
+
+    Parámetros:
+    - modelo: Objeto que se usará para dibujar la media esfera.
+    - x, y, z (float): Coordenadas donde se ubicará la media esfera.
+    - es_trasero (bool): Indica si la esfera está ubicada en la parte trasera del modelo. No se usa actualmente.
+
+    La media esfera se orienta con la parte plana mirando hacia arriba y se ajusta para alinear correctamente con el hilo al que está unida.
+    """
+
     esfera.dibujar(
         textura_id=textura_donut,
         t_x=x,
@@ -342,23 +258,6 @@ def dibujar_esfera_union(modelo, x, y, z, es_trasero=False):
         # Altura de la media esfera (más pequeña para que parezca partida)
         sy=0.04,
         sz=0.08       # Profundidad igual al ancho para mantener proporción
-    )
-
-
-def dibujar_bola_pendulo(modelo, x, y, z, es_trasero=False):
-    """Dibuja una bola grande del péndulo de Newton"""
-    esfera.dibujar(
-        textura_id=textura_esfera,
-        t_x=x,
-        t_y=y - 0.8,  # Bajamos respecto a la posición de la esfera_union
-        t_z=z,
-        angulo=0.0,   # Sin rotación, es una esfera completa
-        eje_x=1.0,
-        eje_y=0.0,
-        eje_z=0.0,
-        sx=1.0,      # Escala grande para la bola
-        sy=1.0,      # Mantener proporciones esféricas
-        sz=1.0      # Mantener proporciones esféricas
     )
 
 
