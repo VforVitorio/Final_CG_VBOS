@@ -118,7 +118,7 @@ class PendulumPhysics():
             velocity = p.getBaseVelocity(ball)[0]
 
             # Mantener posición en Y cerca de su altura inicial
-            if abs(pos[1] - self.initial_positions[i][1]) > 0.2:  # Permitir más libertad en Y
+            if abs(pos[1] - self.initial_positions[i][1]) > 0.15:  # Permitir más libertad en Y
                 corrected_pos = [pos[0], self.initial_positions[i][1], pos[2]]
                 p.resetBasePositionAndOrientation(
                     ball, corrected_pos, [0, 0, 0, 1])
@@ -215,7 +215,7 @@ def renderizar(ball_positions=None):
     gluLookAt(cam_x, cam_y, cam_z, 0, 0, 0, 0, 1, 0)
 
     glDisable(GL_LIGHTING)
-    dibujar_elementos_auxiliares(ejes=True, rejilla=True)
+    # dibujar_elementos_auxiliares(ejes=True, rejilla=True)
     glEnable(GL_LIGHTING)
 
     # Dibuja el cubo (base)

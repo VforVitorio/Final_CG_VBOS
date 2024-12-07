@@ -83,7 +83,7 @@ def renderizar():
     gluLookAt(cam_x, cam_y, cam_z, 0, 0, 0, 0, 1, 0)
 
     glDisable(GL_LIGHTING)
-    dibujar_elementos_auxiliares(ejes=True, rejilla=True)
+    # dibujar_elementos_auxiliares(ejes=True, rejilla=True)
     glEnable(GL_LIGHTING)
 
     # Dibuja el cubo
