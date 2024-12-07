@@ -2,7 +2,7 @@
 
 Este proyecto implementa una **simulación interactiva en 3D** del péndulo de Newton utilizando **Python**, **OpenGL**, y **PyBullet** para la física.
 
-## Descripción
+## 📝 Descripción
 
 - 🔹 **Simulación 3D interactiva del péndulo de Newton**.
 - 🔹 **Sistema de física realista** usando PyBullet y Trimesh.
