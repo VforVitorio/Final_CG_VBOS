@@ -87,6 +87,6 @@ pip install -r requirements.txt
 
    - **Renderizado estático:**
 
-   ```bash
-   python main.py
-   ```
+     ```bash
+     python main.py
+     ```
