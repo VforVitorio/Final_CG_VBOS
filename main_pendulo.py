@@ -92,7 +92,7 @@ class PendulumPhysics():
             # Aplicar fuerza inicial
             p.applyExternalForce(
                 self.balls[0], -1,
-                forceObj=[15.0, 0, 0],  # Fuerza inicial mayor
+                forceObj=[8.0, 0, 0],  # Reducir fuerza inicial
                 posObj=launch_pos,
                 flags=p.WORLD_FRAME
             )
@@ -115,8 +115,8 @@ class PendulumPhysics():
             if i < len(self.balls) - 1:
                 v1 = velocity[0]
                 v2 = p.getBaseVelocity(self.balls[i + 1])[0][0]
-                if abs(v1) > 0.1 and abs(v2) < 0.05:  # Transferencia de energía
-                    transfer_velocity = v1 * 0.98  # Ligeramente reducido
+                if abs(v1) > 0.05 and abs(v2) < 0.02:  # Transferencia más suave
+                    transfer_velocity = v1 * 0.9  # Transferencia reducida
                     p.resetBaseVelocity(self.balls[i + 1], linearVelocity=[transfer_velocity, 0, 0])
 
     def get_ball_positions(self):
@@ -126,7 +126,6 @@ class PendulumPhysics():
     def cleanup(self):
         """Desconecta la simulación de PyBullet"""
         p.disconnect()
-
 
 
 
@@ -363,6 +362,9 @@ while ejecutando:
         elif evento.type == pygame.KEYDOWN:
             if evento.key == pygame.K_SPACE:
                 physics.prepare_ball_launch()
+            elif evento.key == pygame.K_r:
+                physics.cleanup()
+                physics = PendulumPhysics()
 
     consultar_estado_teclado(camara, delta_time)
     physics.step()
